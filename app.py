@@ -11,6 +11,7 @@ from dash.dependencies import Input, Output
 import dash_html_components as html
 import dash_core_components as dcc
 import dash
+import time
 
 #%% Run workers
 import utility
@@ -20,7 +21,17 @@ from worker import conn
 q = Queue(connection=conn)
 
 #%%
-df_getfit = q.enqueue(utility.getfit, t1='2019-01-01',t2='2020-12-31')
+job_getfit = q.enqueue(utility.getfit, t1='2019-01-01',t2='2020-12-31')
+
+t0 = time.time()
+while job_getfit.result is None:
+    t1 = time.time()
+    t2 = t1-t0
+    time.sleep(5)
+    print('waiting: {}'.format(t2))
+
+print('Finished! Time elapse: {}'.format(t2))
+df_getfit = job_getfit.result
 
 #%%
 
