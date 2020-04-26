@@ -96,6 +96,7 @@ def graph(calendar_t, s_z, fit_par,tfit=np.linspace(0, 30, 50)):
     #Factors plots (level, slope, curvature)
     fbs = make_subplots(
         rows=3, cols=2,
+        subplot_titles=['Long-term level',None,'Inversion slope', None, 'Humped curve'],
         specs=[
             [{"type": "xy",}, {"type": "table"}],
             [{"type": "xy"}, {"type": "table"}],
@@ -103,14 +104,9 @@ def graph(calendar_t, s_z, fit_par,tfit=np.linspace(0, 30, 50)):
         ],
         column_widths=[1.5,1]
     )
-
-
     
     yc_level = s_z[:, -1]
     yc_slope = s_z[:, -1]-s_z[:, 0]
-    #m_curve = aol(s_z[:,0],s_z[:,-1],s_z.shape[1])
-    #m_scale = s_z.max(axis=1)-s_z.min(axis=1)
-    #yc_curve = np.sum(s_z/np.transpose(m_curve)-1,axis=1)/m_scale
     yc_curve = s_z[:, -1]-s_z[:, 16]
 
     def tseries_graph(X, Y, perc_h, perc_l, nrow, ncol):
@@ -136,7 +132,7 @@ def graph(calendar_t, s_z, fit_par,tfit=np.linspace(0, 30, 50)):
     fbs.add_scatter(x=[t1, t1], y=[yc_curve.min()-yc_curve.std()*0.5,
                                    yc_curve.max()+yc_curve.std()*0.5], row=3, col=1, mode='lines')
     
-    def yc_x(X,nrow,ncol,i1=-1,i2=-14,i3=-30):
+    def yc_x(X,nrow,ncol,i1=-1,i2=-14,i3=-30,ttext = 'Rates'):
         yc_x_d = np.round(X[-1],2)
         yc_x_biweek = np.round(X[-14:-1].mean(),2)
         yc_x_month = np.round(X[-30:-1].mean(),2)
@@ -144,20 +140,23 @@ def graph(calendar_t, s_z, fit_par,tfit=np.linspace(0, 30, 50)):
         fbs.add_trace(
             go.Table(
                 header=dict(
-                    values=list(['Daily', '14d', '30d'])
+                    values=list([calendar_t.iloc[-1].strftime('%b%d'),ttext])
                 ),
-                cells=dict(values=[[yc_x_d],
-                                [yc_x_biweek],
-                                [yc_x_month]]),
+                cells=dict(values=[['Daily', '14d', '30d'],
+                [yc_x_d,yc_x_biweek,yc_x_month]]
+                ),
                 ),row=nrow, col=ncol
         )
 
-    yc_x(yc_level,1,2)
-    yc_x(yc_slope,2,2)
-    yc_x(yc_curve,3,2)
+    yc_x(yc_level,1,2,ttext='Level')
+    yc_x(yc_slope,2,2,ttext='Slope')
+    yc_x(yc_curve,3,2,ttext='Curve')
 
     fbs.update_layout(width=500, height=700, showlegend=False)
     fbs.update_xaxes(tickformat='%d %b')
+    fbs.update_yaxes(title_text="30yr rate", row=1, col=1)
+    fbs.update_yaxes(title_text="(30yr - 3mo) rate", row=2, col=1)
+    fbs.update_yaxes(title_text="(30yr - 5yr) rate", row=3, col=1)
     return f, fbs
 
 #%%

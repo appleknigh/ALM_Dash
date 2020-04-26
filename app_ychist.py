@@ -21,7 +21,7 @@ from worker import conn
 q = Queue(connection=conn)
 
 #%%
-job_getfit = q.enqueue(utility.getfit, t1='2019-01-01',t2='2020-12-31')
+job_getfit = q.enqueue(utility.getfit, t1='2020-01-01',t2='2020-12-31')
 
 t0 = time.time()
 while job_getfit.result is None:
@@ -34,59 +34,15 @@ print('Finished! Time elapse: {}'.format(t2))
 df_getfit = job_getfit.result
 
 #%%
-reload(utility)
+import importlib
+importlib.reload(utility)
+
 df_yc = utility.ycnsresult(
     df_getfit['t_cal'],
     df_getfit['fit_par'])
-f, fbs = utility.graph(df_getfit['t_cal'][-90:-1],
-                       df_yc[-90:-1],
-                       df_getfit['fit_par'][-90:-1])
-
-
-#%%
-
-
-
-#%%
-import pandas as pd
-from sklearn.linear_model import LinearRegression
-
-#%%
-
-t_lag = 360
-fit_par_diff = df_getfit['fit_par'].iloc[-(t_lag+1):].diff()
-
-y = df_getfit['fit_par'].iloc[-(t_lag+1):]
-x = df_getfit['t_cal'].iloc[-(t_lag+1):]
-
-x = np.array(list(range(len(y[0])))).reshape(-1,1)
-y = y[0].values.reshape(-1,1)
-yfit = LinearRegression().fit(x,y)
-yfit.coef_
-
-#%%
-diff_ycstatus = {'DailyChange': fit_par_diff.iloc[-1,:].values,
-                 'AvgChange60d': fit_par_diff.mean(axis=0).values,
-                 'UpperChange60d': fit_par_diff.quantile(0.95,axis=0).values,
-                 'LowerChange60d': fit_par_diff.quantile(0.05,axis=0).values}
-pd.DataFrame(diff_ycstatus).round(3)
-
-#%%
-
-diff_daily = df_getfit['fit_par'][0].diff()
-diff_monthly = df_getfit['fit_par'][0].diff().iloc[-31:-1].mean()
-std_diffmonthly = df_getfit['fit_par'][0].diff().iloc[-31:-1].quantile(0.05)
-std_diffmonthly = df_getfit['fit_par'][0].diff().iloc[-31:-1].quantile(0.05)
-
-std_diffmonthly = df_getfit['fit_par'][0].diff().iloc[-31:-1].std()
-
-print([diff_daily,diff_monthly,std_diffmonthly])
-
-
-#%%
-
-df_getfit['fit_par'][1].diff()
-
+f, fbs = utility.graph(df_getfit['t_cal'][:-1],
+                       df_yc[:-1],
+                       df_getfit['fit_par'][:-1])
 
 #%% Dash
 
@@ -121,7 +77,7 @@ body = dbc.Container(
                         [
 
                             dcc.Graph(id='graph', figure=f)
-                        ], width=8
+                        ], width=6
                     ),
                     dbc.Col(
                         [
@@ -177,11 +133,11 @@ def update_figure(time_index):
         f.data[1].x = np.repeat(t, tfit.shape[0])
         #print('success')
     with fbs.batch_update():
-        fbs.data[3].x = [t, t]
-        fbs.data[4].x = [t, t]
-        fbs.data[5].x = [t, t]
+        fbs.data[9].x = [t, t]
+        fbs.data[10].x = [t, t]
+        fbs.data[11].x = [t, t]
         #print('success')
-    return f, fbs, 'Time Slider: <' + str(t) + '>'
+    return f, fbs, 'Time Slider: <' + t.strftime('%b %d %Y') + '>'
 
 if __name__ == "__main__":
 	app.run_server(debug=True)
