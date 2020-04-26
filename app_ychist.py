@@ -34,11 +34,59 @@ print('Finished! Time elapse: {}'.format(t2))
 df_getfit = job_getfit.result
 
 #%%
-
+reload(utility)
 df_yc = utility.ycnsresult(
     df_getfit['t_cal'],
     df_getfit['fit_par'])
-f, fbs = utility.graph(df_getfit['t_cal'], df_yc, df_getfit['fit_par'])
+f, fbs = utility.graph(df_getfit['t_cal'][-90:-1],
+                       df_yc[-90:-1],
+                       df_getfit['fit_par'][-90:-1])
+
+
+#%%
+
+
+
+#%%
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+
+#%%
+
+t_lag = 360
+fit_par_diff = df_getfit['fit_par'].iloc[-(t_lag+1):].diff()
+
+y = df_getfit['fit_par'].iloc[-(t_lag+1):]
+x = df_getfit['t_cal'].iloc[-(t_lag+1):]
+
+x = np.array(list(range(len(y[0])))).reshape(-1,1)
+y = y[0].values.reshape(-1,1)
+yfit = LinearRegression().fit(x,y)
+yfit.coef_
+
+#%%
+diff_ycstatus = {'DailyChange': fit_par_diff.iloc[-1,:].values,
+                 'AvgChange60d': fit_par_diff.mean(axis=0).values,
+                 'UpperChange60d': fit_par_diff.quantile(0.95,axis=0).values,
+                 'LowerChange60d': fit_par_diff.quantile(0.05,axis=0).values}
+pd.DataFrame(diff_ycstatus).round(3)
+
+#%%
+
+diff_daily = df_getfit['fit_par'][0].diff()
+diff_monthly = df_getfit['fit_par'][0].diff().iloc[-31:-1].mean()
+std_diffmonthly = df_getfit['fit_par'][0].diff().iloc[-31:-1].quantile(0.05)
+std_diffmonthly = df_getfit['fit_par'][0].diff().iloc[-31:-1].quantile(0.05)
+
+std_diffmonthly = df_getfit['fit_par'][0].diff().iloc[-31:-1].std()
+
+print([diff_daily,diff_monthly,std_diffmonthly])
+
+
+#%%
+
+df_getfit['fit_par'][1].diff()
+
 
 #%% Dash
 

@@ -41,6 +41,18 @@ def ycnsresult(calendar_t, fit_par, tfit=np.linspace(0, 30, 50)):
     return s_z
 
 
+def aol(yp1,yp2,n):
+    slope = (yp2 - yp1)/n
+    k = yp1
+    t = np.linspace(1,50,50)
+
+    m_t = np.zeros([len(t),len(t)])
+    np.fill_diagonal(m_t,t)
+    m_slope = np.tile(slope,(50,1))
+    m_k = np.tile(k,(50,1))
+    m = np.dot(m_t,m_slope) + m_k
+    return m
+
 def graph(calendar_t, s_z, fit_par,tfit=np.linspace(0, 30, 50)):
     #Setting
     color_scale = [[0, "rgb(31, 119, 180)"], [1, "rgb(31, 119, 180)"]]
@@ -83,23 +95,69 @@ def graph(calendar_t, s_z, fit_par,tfit=np.linspace(0, 30, 50)):
 
     #Factors plots (level, slope, curvature)
     fbs = make_subplots(
-        rows=3, cols=1,
-        subplot_titles=("Level", "Slope", "Curvature")
+        rows=3, cols=2,
+        specs=[
+            [{"type": "xy",}, {"type": "table"}],
+            [{"type": "xy"}, {"type": "table"}],
+            [{"type": "xy"}, {"type": "table"}]
+        ],
+        column_widths=[1.5,1]
     )
 
-    fbs.add_scatter(x=calendar_t, y=fit_par.iloc[:, 0], row=1, col=1)
-    fbs.add_scatter(x=calendar_t, y=fit_par.iloc[:, 1], row=2, col=1)
-    fbs.add_scatter(x=calendar_t, y=fit_par.iloc[:, 2], row=3, col=1)
+
+    
+    yc_level = s_z[:, -1]
+    yc_slope = s_z[:, -1]-s_z[:, 0]
+    #m_curve = aol(s_z[:,0],s_z[:,-1],s_z.shape[1])
+    #m_scale = s_z.max(axis=1)-s_z.min(axis=1)
+    #yc_curve = np.sum(s_z/np.transpose(m_curve)-1,axis=1)/m_scale
+    yc_curve = s_z[:, -1]-s_z[:, 16]
+
+    def tseries_graph(X, Y, perc_h, perc_l, nrow, ncol):
+        fbs.add_scatter(x=X,
+                        y=np.repeat(np.quantile(Y, 0.05),X.shape[0]),
+                        line_color='grey', row=nrow, col=ncol, line=dict(width=0))
+        fbs.add_scatter(x=X,
+                        y=np.repeat(np.quantile(Y, 0.95),X.shape[0]),
+                        fill='tonexty', line_color='grey', opacity=0.5,
+                        row=nrow, col=ncol, line=dict(width=0))
+        fbs.add_scatter(x=X, y=Y,
+                        line_color='black', row=nrow, col=ncol)
+
+    tseries_graph(calendar_t,yc_level,0.95,0.05,1,1)
+    tseries_graph(calendar_t,yc_slope,0.95,0.05,2,1)
+    tseries_graph(calendar_t,yc_curve,0.95,0.05,3,1)
 
     t1 = calendar_t.iloc[-1]
-    fbs.add_scatter(x=[t1, t1], y=[fit_par.iloc[:, 0].min(),
-                                   fit_par.iloc[:, 0].max()], row=1, col=1, mode='lines')
-    fbs.add_scatter(x=[t1, t1], y=[fit_par.iloc[:, 1].min(),
-                                   fit_par.iloc[:, 1].max()], row=2, col=1, mode='lines')
-    fbs.add_scatter(x=[t1, t1], y=[fit_par.iloc[:, 2].min(),
-                                   fit_par.iloc[:, 2].max()], row=3, col=1, mode='lines')
+    fbs.add_scatter(x=[t1, t1], y=[yc_level.min()-yc_level.std()*0.5,
+                                   yc_level.max()+yc_level.std()*0.5], row=1, col=1, mode='lines')
+    fbs.add_scatter(x=[t1, t1], y=[yc_slope.min()-yc_slope.std()*0.5,
+                                   yc_slope.max()+yc_slope.std()*0.5], row=2, col=1, mode='lines')
+    fbs.add_scatter(x=[t1, t1], y=[yc_curve.min()-yc_curve.std()*0.5,
+                                   yc_curve.max()+yc_curve.std()*0.5], row=3, col=1, mode='lines')
+    
+    def yc_x(X,nrow,ncol,i1=-1,i2=-14,i3=-30):
+        yc_x_d = np.round(X[-1],2)
+        yc_x_biweek = np.round(X[-14:-1].mean(),2)
+        yc_x_month = np.round(X[-30:-1].mean(),2)
+        
+        fbs.add_trace(
+            go.Table(
+                header=dict(
+                    values=list(['Daily', '14d', '30d'])
+                ),
+                cells=dict(values=[[yc_x_d],
+                                [yc_x_biweek],
+                                [yc_x_month]]),
+                ),row=nrow, col=ncol
+        )
+
+    yc_x(yc_level,1,2)
+    yc_x(yc_slope,2,2)
+    yc_x(yc_curve,3,2)
 
     fbs.update_layout(width=500, height=700, showlegend=False)
+    fbs.update_xaxes(tickformat='%d %b')
     return f, fbs
 
 #%%
