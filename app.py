@@ -21,17 +21,17 @@ from worker import conn
 q = Queue(connection=conn)
 
 #%%
-job_getfit = q.enqueue(utility.getfit, t1='2020-03-01',t2='2020-12-31')
+# job_getfit = q.enqueue(utility.getfit, t1='2020-03-01',t2='2020-12-31')
 
-t0 = time.time()
-while job_getfit.result is None:
-    t1 = time.time()
-    t2 = t1-t0
-    time.sleep(5)
-    print('waiting: {}'.format(t2))
+# t0 = time.time()
+# while job_getfit.result is None:
+#     t1 = time.time()
+#     t2 = t1-t0
+#     time.sleep(5)
+#     print('waiting: {}'.format(t2))
 
-print('Finished! Time elapse: {}'.format(t2))
-df_getfit = job_getfit.result
+# print('Finished! Time elapse: {}'.format(t2))
+df_getfit = utility.getfit(t1='2020-01-01',t2='2020-12-31')
 
 #%%
 df_yc = utility.ycnsresult(
