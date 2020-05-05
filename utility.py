@@ -169,7 +169,7 @@ def graph(calendar_t, s_z, fit_par,tfit=np.linspace(0, 30, 50)):
     fbs.update_xaxes(tickformat='%d %b %Y')
     fbs.update_yaxes(title_text="30yr rate", row=1, col=1)
     fbs.update_yaxes(title_text="(30yr - 3mo) rate", row=2, col=1)
-    fbs.update_yaxes(title_text="(30yr - 5yr) rate", row=3, col=1)
+    fbs.update_yaxes(title_text="(30yr - 10yr) rate", row=3, col=1)
     return f, fbs
 
 #%%
