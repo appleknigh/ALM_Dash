@@ -86,7 +86,7 @@ def graph(calendar_t, s_z, fit_par,tfit=np.linspace(0, 30, 50)):
             zaxis=dict(title_text='Yield')),
         scene_camera=camera,
         title={
-            'text': "US Treasury Yield Curve",
+            'text': "US treasury yield curve at a glance",
             'x': 0.5,
             'y': 0.9},
         width=700,
@@ -104,12 +104,23 @@ def graph(calendar_t, s_z, fit_par,tfit=np.linspace(0, 30, 50)):
         ],
         column_widths=[1.5,1]
     )
-    
-    yc_level = s_z[:, -1]
-    yc_slope = s_z[:, -1]-s_z[:, 0]
-    yc_curve = s_z[:, -1]-s_z[:, 16]
 
-    def tseries_graph(X, Y, perc_h, perc_l, nrow, ncol):
+    def anomaly(x0):
+        x = np.append(0,np.diff(x0))
+        i_x = np.where(x > (x.mean()+4*x.std()))
+        return i_x
+        
+    yc_level = s_z[:, -1]
+    yc_ilevel = anomaly(yc_level)
+    print(calendar_t.iloc[yc_ilevel])
+    print(yc_level[yc_ilevel])
+    
+    yc_slope = s_z[:, -1]-s_z[:, 0]
+    yc_islope = anomaly(yc_slope)
+    yc_curve = s_z[:, -1]-s_z[:, 16]
+    yc_icurve = anomaly(yc_curve)
+    
+    def tseries_graph(X, Y, i, perc_h, perc_l, nrow, ncol):
         fbs.add_scatter(x=X,
                         y=np.repeat(np.quantile(Y, 0.05),X.shape[0]),
                         line_color='grey', row=nrow, col=ncol, line=dict(width=0))
@@ -119,10 +130,12 @@ def graph(calendar_t, s_z, fit_par,tfit=np.linspace(0, 30, 50)):
                         row=nrow, col=ncol, line=dict(width=0))
         fbs.add_scatter(x=X, y=Y,
                         line_color='black', row=nrow, col=ncol)
+        #fbs.add_scatter(x=X.iloc[i], y=Y[i], mode='markers',
+        #                row=nrow, col=ncol)
 
-    tseries_graph(calendar_t,yc_level,0.95,0.05,1,1)
-    tseries_graph(calendar_t,yc_slope,0.95,0.05,2,1)
-    tseries_graph(calendar_t,yc_curve,0.95,0.05,3,1)
+    tseries_graph(calendar_t,yc_level,yc_ilevel,0.95,0.05,1,1)
+    tseries_graph(calendar_t,yc_slope,yc_islope,0.95,0.05,2,1)
+    tseries_graph(calendar_t,yc_curve,yc_icurve,0.95,0.05,3,1)
 
     t1 = calendar_t.iloc[-1]
     fbs.add_scatter(x=[t1, t1], y=[yc_level.min()-yc_level.std()*0.5,
@@ -153,7 +166,7 @@ def graph(calendar_t, s_z, fit_par,tfit=np.linspace(0, 30, 50)):
     yc_x(yc_curve,3,2,ttext='Curve')
 
     fbs.update_layout(width=500, height=700, showlegend=False)
-    fbs.update_xaxes(tickformat='%d %b')
+    fbs.update_xaxes(tickformat='%d %b %Y')
     fbs.update_yaxes(title_text="30yr rate", row=1, col=1)
     fbs.update_yaxes(title_text="(30yr - 3mo) rate", row=2, col=1)
     fbs.update_yaxes(title_text="(30yr - 5yr) rate", row=3, col=1)

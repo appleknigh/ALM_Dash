@@ -36,7 +36,7 @@ df_getfit = job_getfit.result
 #%%
 import importlib
 importlib.reload(utility)
-
+import matplotlib.pyplot as plt
 df_yc = utility.ycnsresult(
     df_getfit['t_cal'],
     df_getfit['fit_par'])
@@ -44,26 +44,31 @@ f, fbs = utility.graph(df_getfit['t_cal'][:-1],
                        df_yc[:-1],
                        df_getfit['fit_par'][:-1])
 
+#%%
+yp =df_getfit['fit_par'][:-1][2] 
+
+def lag_diff(x,lag):
+    x_shift = np.append(np.zeros(lag),x)
+    x_diff = np.append(x,np.zeros(lag))-x_shift
+    return np.append(np.zeros(lag),x_diff[lag:-lag])
+
+x = lag_diff(yp,1)
+i_x = np.where(x > (x.mean()+3*x.std()))
+
+plt.plot(yp)
+plt.scatter(i_x,yp.iloc[i_x],color='red')
+
 #%% Dash
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 navbar = dbc.NavbarSimple(
     children=[
-        dbc.NavItem(dbc.NavLink("Link", href="#")),
-        dbc.DropdownMenu(
-            nav=True,
-            in_navbar=True,
-            label="Menu",
-            children=[
-                dbc.DropdownMenuItem("Entry 1"),
-                dbc.DropdownMenuItem("Entry 2"),
-                dbc.DropdownMenuItem(divider=True),
-                dbc.DropdownMenuItem("Entry 3"),
-            ],
-        ),
+        dbc.NavItem(dbc.NavLink("Yield-Curve Dashboard", href="#")),
+        dbc.NavItem(dbc.NavLink("Shock Analytics", href="#")),
+        dbc.NavItem(dbc.NavLink("Appendix", href="#")),
     ],
-    brand="Demo",
+    brand="Demo - US Daily Treasury Curve Modelling",
     brand_href="#",
     sticky="top",
 )
