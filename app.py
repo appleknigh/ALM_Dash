@@ -11,14 +11,7 @@ from dash.dependencies import Input, Output
 import dash_html_components as html
 import dash_core_components as dcc
 import dash
-import time
-
-#%% Run workers
 import utility
-from rq import Queue
-from worker import conn
-
-q = Queue(connection=conn)
 
 #%%
 # job_getfit = q.enqueue(utility.getfit, t1='2020-03-01',t2='2020-12-31')
@@ -39,7 +32,7 @@ df_yc = utility.ycnsresult(
     df_getfit['fit_par'])
 f, fbs = utility.graph(df_getfit['t_cal'][:-1],
                        df_yc[:-1],
-                       df_getfit['fit_par'][:-1])
+                       df_getfit['y'])
 
 #%% Dash
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])

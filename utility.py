@@ -53,7 +53,7 @@ def aol(yp1,yp2,n):
     m = np.dot(m_t,m_slope) + m_k
     return m
 
-def graph(calendar_t, s_z, fit_par,tfit=np.linspace(0, 30, 50)):
+def graph(calendar_t, s_z, df_yc,tfit=np.linspace(0, 30, 50)):
     #Setting
     color_scale = [[0, "rgb(31, 119, 180)"], [1, "rgb(31, 119, 180)"]]
     light_effect = dict(
@@ -110,14 +110,14 @@ def graph(calendar_t, s_z, fit_par,tfit=np.linspace(0, 30, 50)):
         i_x = np.where(x > (x.mean()+4*x.std()))
         return i_x
         
-    yc_level = s_z[:, -1]
+    yc_level = df_yc[:, -1] #30 yrs
     yc_ilevel = anomaly(yc_level)
     print(calendar_t.iloc[yc_ilevel])
     print(yc_level[yc_ilevel])
     
-    yc_slope = s_z[:, -1]-s_z[:, 0]
+    yc_slope = df_yc[:, -3]-df_yc[:, 0] #10yrs - 3mos
     yc_islope = anomaly(yc_slope)
-    yc_curve = s_z[:, -1]-s_z[:, 16]
+    yc_curve = (df_yc[:, 7]-df_yc[:, 6]) #5yrs - 3yrs
     yc_icurve = anomaly(yc_curve)
     
     def tseries_graph(X, Y, i, perc_h, perc_l, nrow, ncol):
@@ -168,8 +168,8 @@ def graph(calendar_t, s_z, fit_par,tfit=np.linspace(0, 30, 50)):
     fbs.update_layout(width=500, height=700, showlegend=False)
     fbs.update_xaxes(tickformat='%d %b %Y')
     fbs.update_yaxes(title_text="30yr rate", row=1, col=1)
-    fbs.update_yaxes(title_text="(30yr - 3mo) rate", row=2, col=1)
-    fbs.update_yaxes(title_text="(30yr - 10yr) rate", row=3, col=1)
+    fbs.update_yaxes(title_text="(10yr - 3mo) rate", row=2, col=1)
+    fbs.update_yaxes(title_text="(5yr - 3yr) rate", row=3, col=1)
     return f, fbs
 
 #%%
